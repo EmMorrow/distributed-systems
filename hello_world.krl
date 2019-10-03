@@ -25,7 +25,7 @@ A first ruleset for the Quickstart
     send_directive("say", {"something": "Hello World"})
   }
 
-  rule monkey {
+  rule hello_monkey {
     select when echo monkey
     pre {
       name = event:attr("name").defaultsTo("Monkey").klog("name: ")
