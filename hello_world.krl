@@ -30,7 +30,15 @@ A first ruleset for the Quickstart
     pre {
       name = event:attr("name").defaultsTo("Monkey").klog("name: ")
     }
-    send_directive("say", {"something": "Hello" + name})
+    send_directive("say", {"something": "Hello " + name})
+  }
+
+  rule ternary_hello_monkey {
+    select when echo ternary_monkey
+    pre {
+      name = ((event:attr("name") == null) => "Monkey" | event:attr("name")).klog("name: ")
+    }
+    send_directive("say", {"something": "Hello " + name})
   }
 
 }
