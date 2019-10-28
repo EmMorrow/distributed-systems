@@ -1,7 +1,7 @@
 ruleset the_movie_db {
   meta {
     configure using apiKey = ""
-    shares __testing
+    shares __testing, send_sms
   }
   global {
     send_sms = defaction(to, from, message, account_sid, auth_token) {
