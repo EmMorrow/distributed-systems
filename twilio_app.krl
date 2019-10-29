@@ -8,14 +8,14 @@ ruleset twilio_app {
 
   rule send_sms {
     select when test new_message
-    send_sms(event:attr("to"),
+    twilio:send_sms(event:attr("to"),
              event:attr("from"),
              event:attr("message"))
   }
 
   rule messages {
     select when test messages
-    messages(event:attr("to"),
+    twilio:messages(event:attr("to"),
              event:attr("from"))
   }
 }
