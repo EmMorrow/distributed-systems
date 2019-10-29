@@ -15,8 +15,16 @@ ruleset twilio_db {
                 })
     }
 
-    messages = function(to, from) {
+    messages = function(size, to, from) {
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>
 
+      params = {}
+      ((size != null) => params.put({"PageSize":size})).klog("size: ")
+      ((to != null) => params.put({"To":to})).klog("to: ")
+      ((from != null) => params.put({"From":from})).klog("from: ")
+
+      resp = http:get(base_url + "Messages.json", params)
+      resp{"content"}.decode(){"messages"}
     }
     __testing = {
       "queries": [ { "name": "send_sms", "args": [ "to","from","message","account_sid","auth_token" ] }, { "name": "__testing" } ],

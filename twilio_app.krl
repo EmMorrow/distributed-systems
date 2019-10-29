@@ -15,7 +15,11 @@ ruleset twilio_app {
 
   rule messages {
     select when test messages
-    twilio:messages(event:attr("to"),
-             event:attr("from"))
+    pre {
+      messages = twilio:messages(event:attr("size"),
+                   event:attr("to"),
+                   event:attr("from"))
+    }
+    send_directive("listMessages", {"messages": messages})
   }
 }
