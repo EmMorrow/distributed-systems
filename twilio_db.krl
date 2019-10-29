@@ -16,15 +16,14 @@ ruleset twilio_db {
     }
 
     messages = function(size, to, from) {
-      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>;
+      params = {};
+      params = ((size != null) => params.put({"PageSize":size}) | params).klog("size: ");
+      params = ((to != null) => params.put({"To":to}) | params).klog("to: ");
+      params = ((from != null) => params.put({"From":from}) | params).klog("from: ");
 
-      params = {}
-      ((size != null) => params.put({"PageSize":size})).klog("size: ")
-      ((to != null) => params.put({"To":to})).klog("to: ")
-      ((from != null) => params.put({"From":from})).klog("from: ")
-
-      resp = http:get(base_url + "Messages.json", params)
-      resp{"content"}.decode(){"messages"}
+      resp = http:get(base_url + "Messages.json", params);
+      resp.get(["content"]).decode()
     }
     __testing = {
       "queries": [ { "name": "send_sms", "args": [ "to","from","message","account_sid","auth_token" ] }, { "name": "__testing" } ],
