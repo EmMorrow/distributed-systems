@@ -27,4 +27,19 @@ ruleset wovyn_base {
         attributes {"temperature": temp, "timestamp": time:now()}
     }
   }
+
+  rule find_high_temps {
+    select when wovyn new_temperature_reading
+    pre {
+      temp = event:attr("temperature")
+    }
+    if temp > temperature_threshold then
+      send_directive("violation")
+    fired {
+      raise wovyn event "threshold_violation"
+        attributes {"temperature": temp, "timestamp": time.now()}
+    }
+  }
+
+  
 }
