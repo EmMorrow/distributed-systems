@@ -4,22 +4,21 @@ ruleset wovyn_base {
   }
   global {
     __testing = { "queries": [ { "name": "__testing" } ],
-                  "events": [ { "domain": "post", "type": "test",
+                  "events": [ { "domain": "wovyn", "type": "heeartbeat",
                               "attrs": [ "temp", "baro" ] } ] }
-  }
-
-  rule post_test {
-    select when post test
-    pre {
-      never_used = event:attrs().klog("attrs")
-    }
   }
 
   rule process_heartbeat {
     select when wovyn heartbeat
     pre {
       never_used = event:attrs().klog("attrs")
+      info = event:attr("genericThing")
     }
-    send_directive("say", {"something": "Hello World"})
+
+    if not info.isnull() then
+    send_directive("say", {
+      "message": "Hello World",
+      "temp": info
+    })
   }
 }
