@@ -24,7 +24,7 @@ ruleset wovyn_base {
 
     if not info.isnull() then
       send_directive("say", {
-        "message": "Hello World",
+        "message": "Processed heartbeat",
         "temp": temp
       })
     fired {
