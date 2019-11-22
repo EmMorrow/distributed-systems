@@ -19,7 +19,7 @@ ruleset wovyn_base {
     select when wovyn heartbeat
     pre {
       info = event:attr("genericThing")
-      temp = event:attr("genericThing"){"data"}{"temperature"}[0]{"temperatureF"}
+      temp = event:attr("genericThing")["data"]["temperature"][0]["temperatureF"]
     }
 
     if not info.isnull() then
