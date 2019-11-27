@@ -28,8 +28,8 @@ ruleset temperature_store {
     }
 
     always {
-      ent:temps := (ent:temps.isnull() => [] | ent:temps)
-      ent:temps := ent:temps.append({"temp":temp, "time":time})
+      ent:temps := (ent:temps.isnull()) => [{"temp":temp, "time":time}] | ent:temps.append({"temp":temp, "time":time})
+
     }
   }
 
@@ -41,16 +41,15 @@ ruleset temperature_store {
     }
 
     always {
-      ent:violations := (ent:violations.isnull() => [] | ent:violations)
-      ent:violations := ent:violations.append({"temp":temp, "time":time})
+      ent:violations := (ent:violations.isnull()) => [{"temp":temp, "time":time}] | ent:violations.append({"temp":temp, "time":time})
     }
   }
 
   rule clear_temperatures {
     select when sensor reading_reset
     always {
-      ent:violations := []
-      ent:temps := []
+      ent:violations := [];
+      ent:temps := [];
     }
   }
 }
