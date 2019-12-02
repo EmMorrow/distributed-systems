@@ -6,10 +6,10 @@ ruleset sensor_profile {
   global {
     get_user_profile = function() {
       {
-        ent:name
-        ent:location
-        ent:temp
-        ent:threshold
+        "name": ent:name,
+        "location": ent:location,
+        "threshold": ent:threshold,
+        "to": ent:to,
       }
     }
   }
@@ -19,18 +19,18 @@ ruleset sensor_profile {
     pre {
       name = event:attr("name")
       location = event:attr("location")
-      threshold = event:attr("threshold")
-      number = event:attr("to")
+      threshold = event:attr("threshold").defaultsTo(ent:threshold)
+      number = event:attr("to").defaultsTo(ent:to)
+
+      threshold = threshold.isnull() => 75 | threshold
+      number = number.isnull() => "+16512300419" | number
     }
 
     always {
-      ent:threshold := (ent:threshold.isnull()) => 75 | ent:threshold
-      ent:to := (ent:to.isnull()) => '+16512300419' | ent:to
-
-      ent:name := name
-      ent:location := location
-      ent:threshold := (threshold.isnull()) => ent:threshold | threshold
-      ent:to := (number.isnull()) => ent:to | number
+      ent:name := name;
+      ent:location := location;
+      ent:threshold := threshold;
+      ent:to := number;
     }
   }
 }
