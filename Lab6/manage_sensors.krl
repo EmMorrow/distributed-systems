@@ -55,8 +55,8 @@ ruleset manage_sensors {
       }
     )
     always {
-      ent:sensors := ent:sensors.defaultsTo({})
-      ent:sensors{[name]} := this_sensor
+      ent:sensors := ent:sensors.defaultsTo({});
+      ent:sensors{[name]} := this_sensor;
     }
   }
 
@@ -71,8 +71,8 @@ ruleset manage_sensors {
       send_directive("deleting sensor",{"name":name})
     fired {
       raise wrangler event "child_deletion"
-        attributes {"name": name}
-      ent:sensors := ent:sensors.delete([name])
+        attributes {"name": name};
+      ent:sensors := ent:sensors.delete([name]);
     }
   }
 }
