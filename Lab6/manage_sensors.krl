@@ -1,10 +1,9 @@
 ruleset manage_sensors {
   meta {
-    provides get_user_profile
-    shares get_user_profile
+    shares __testing, all_sensor_temps, sensors
   }
   global {
-    __testing = { "queries": [ { "name": "__testing" } ],
+    __testing = { "queries": [ { "name": "__testing" } , {"name": "sensors"}, {"name": "all_sensor_temps"}],
                   "events": [
                     { "domain": "sensor", "type": "new_sensor",
                               "attrs": [ "name" ] },
@@ -13,7 +12,16 @@ ruleset manage_sensors {
                   ]
                 }
     sensors = function() {
-      env:sensors
+      ent:sensors
+    }
+
+    all_sensor_temps = function() {
+      ent:sensors.map(function(v,k) {
+        url = "http://192.168.1.4:8080/sky/cloud/" + v{"eci"} + "/temperature_store/temperatures";
+        {
+          "temps": http:get(url){"content"}.decode()
+        }
+      })
     }
 
     default_threshold = 75
@@ -38,7 +46,7 @@ ruleset manage_sensors {
     select when wrangler child_initialized
     pre {
       this_sensor = {"id": event:attr("id"), "eci": event:attr("eci")}
-      name = event:attr("rs_attrs") {"name"}
+      name = event:attr("name")
     }
     event:send(
       {
