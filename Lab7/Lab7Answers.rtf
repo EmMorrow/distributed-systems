@@ -1,0 +1,17 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid1\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls1\ilvl0
+\f0\fs24 \cf0 1. An auto-approval rule for subscriptions could be insecure because the pico accepting the subscription doesn\'92t necessarily know if this is a wanted subscription. Any pico that has the eid of the auto accepting pico could form a subscription with that pico because it will automatically accept any subscription requests. If you want to be more secure you can check to make sure the request is what that pico is looking for.\
+2. You can have a sensor pico in more than one sensor management pico.\
+3. You could specify the sensor types when you are creating a subscription. In my implementation when I am retrieving the temp sensors I query the subscriptions where the Rx_role = sensor. If there were more types of sensors I would just change this role to be temp_sensor for the temperature device, pressure_sensor for the pressure device and so on.\
+4. If you had different levels of a building you wanted to specify sensors by you could change the channel_type to specify the floor that the device is on and you could query subscriptions by that. \
+5. With my modification the sensor pico could not belong to more than one collection. If you wanted to allow picos to belong to more than one collection then you could have the manager keep track of collection picos and have these collection picos be in charge of the subscriptions to the sensors. In this case sensors could belong to more than one collection by subscribing to multiple collection picos. If a sensor belonged to more than one collection the way my lab is set up there would be multiple notifications for a threshold violation.\
+6. I added the threshold violation to an existing ruleset. I had the manage_sensors ruleset send a notification since It seems like sending a notification falls under the responsibility of a sensor manager. \
+7. When I moved the violation I had the wovyn ruleset have its own rule for handling a threshold_violation which triggers an event in the manage_sensors ruleset. There is then a rule that handles this event that comes from the wovyn_base ruleset and sends the text. I only added the one rule in the manage_sensors ruleset to handle the violation and send the text because it wasn\'92t an action that needed to be broken up since we already have the twilio ruleset to do all the texting work. }
