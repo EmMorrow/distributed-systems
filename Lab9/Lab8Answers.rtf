@@ -1,0 +1,14 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid1\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls1\ilvl0
+\f0\fs24 \cf0 1. A sensor can be in more than one collection at a time. This shouldn\'92t change how the report code works however since the sensor only sends its report info to the pico that triggers the event. This just means that the sensor could potentially provide its report information to multiple picos.\
+2. In order to ensure that only certain picos can raise an event that triggers the temperature report in a sensor you could add a check on the sensors event that creates the report that makes sure the pico requesting the report is an approved pico.\
+3. In the logs you can see the temperature_report rule being added to the schedule for each of the temp sensors. Then after these events process you can see the tempearture_report_created rule being triggered for each of the temp sensors which means that each of the sensors returned their temperature report. This shows that the manager sends out an event to all of the relevant subscriptions then gathers the information that each of the subscriptions provide. \
+4. After a certain amount of time you could have the report time-out and give an indication that the report never completed. }
