@@ -194,3 +194,4 @@ ruleset gossip {
         "attrs": {"message": msg, "sender": {"picoId": meta:picoId, "Rx": sender{"Tx"}, "Tx": sender{"Rx"}}}
       })
   }
+}
