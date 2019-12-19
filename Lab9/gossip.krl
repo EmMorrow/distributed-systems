@@ -7,7 +7,10 @@ ruleset gossip {
   global {
     __testing = { "queries": [ { "name": "__testing" }, { "name": "getMessages"} ],
                   "events": [ { "domain": "gossip", "type": "seen",
-                              "attrs": [ "message", "sender" ] } ] }
+                              "attrs": [ "message", "sender" ] } ,
+                            { "domain": "wovyn", "type": "temp_added",
+                              "attrs": [ "time", "temp" ] }
+                              ] }
 
        // use Tx_role and Rx_role in each subscription to simply be "node".
 
@@ -19,9 +22,23 @@ ruleset gossip {
     }
 
     getPeer = function() {
-      subs = Subs:established("Rx_role","node");
+      subs = Subs:established("Rx_role","node").klog("all subs!: ");
       rand_sub = random:integer(subs.length() - 1);
-      rand_sub;
+
+      peers = ent:peer_seen;
+      peers_in_need = peers.filter(function(v,k){
+          getUnseenMessages(v).length() > 0;
+      });
+
+      rand = random:integer(peers_in_need.length() - 1);
+      peer_to_send = peers_in_need.keys()[rand];
+
+      sub = subs.filter(function(sub){
+        add = (sub{"Rx"} == peer_to_send) => true | false;
+        add;
+      }).klog("(getPeer) sub: ");
+      send = sub.length() == 0 => subs[rand_sub] | sub;
+      send;
     }
 
     getPeerSeen = function() {
@@ -34,28 +51,30 @@ ruleset gossip {
     }
 
     // returns a list of messages a peer hasn't seen
-    getUnseenMessages = function(peer_id) {
-      peer_seen = ent:peer_seen.get(peer_id);
-      unseen = ent:all_messages.filter(function(rumor) {
-        curr_picoid = rumor{"SensorID"};
-        curr_seq = peer_seen{curr_picoid};
-        my_seq = getSeq(rumor{"MessageID"});
-
-        peer_seq = peer_seen.isnull() || curr_seen.isnull() => 0 | curr_seq;
-        add = (my_seq > peer_seq) => true | false;
-        add;
-      })
+    getUnseenMessages = function(seen) {
+     unseen = ent:all_messages.filter(function(rumor) {
+        rumor.klog("(getUnseenMessages) currRumor: ");
+        curr_id = rumor{"SensorID"};
+        seen.klog("(getUnseenMessages) seen: ");
+        seen{curr_id}.klog("(getUnseenMessages) seen at curr_id: ");
+        add = seen{curr_id}.isnull() || (seen{curr_id} < getSeq(rumor{"MessageID"})) => true | false;
+        add
+      });
+      unseen.klog("(getUnseenMessages) unseen: ");
     }
 
     prepareSeen = function() {
       // make a map that maps pico id's to the max num of messages you've seen
-      ent:seen
+      ent:seen.defaultsTo({}).klog("prepareSeen: ")
     }
 
     // look at peer seen to see what you should send, update peer_seen here as well
     prepareRumor = function(peer) {
-      peer_id = peer{"Tx"};
-      unseen = getUnseenMessages(peer_id);
+      peer.klog("(prepareRumor) Peer options we have: ");
+      peer_id = peer{"Rx"};
+      peer_id.klog("(prepareRumor) peer_id: ");
+      ent:peer_seen.klog("(prepareRumor) peer_seen: ");
+      unseen = getUnseenMessages(ent:peer_seen.get(peer_id));
       rumor = unseen[0];
 
       // add to peer_seen
@@ -85,6 +104,7 @@ ruleset gossip {
 
       new_seq = (seq - old_seq == 1) => seq | old_seq;
       getPeerSeen().klog("peer seen before adding peer seen: ");
+      ent:peer_seen.klog("just peer seen before: ");
       getPeerSeen().put([peerId, sensorId], new_seq).klog("peer seen after: ");
     }
 
@@ -99,23 +119,56 @@ ruleset gossip {
     }
 
     messageNotAlreadyReceived = function(message) {
+      meta:picoId.klog("(messageNotAlreadyReceived) curr pico: ");
+      ent:all_messages.klog("(messageNotAlreadyReceived) all_messages: ");
+      message.klog("(messageNotAlreadyReceived) message: ");
       match = ent:all_messages.filter(function(msg) {
         msg{"MessageID"} == message{"MessageID"}
       });
-
-      exists = (match.length()) == 0 => true | false;
-      exists
+      match.klog("(messageNotAlreadyReceived) match: ");
+      noexist = (match.length()) == 0 => true | false;
+      noexist
     }
   }
 
 
+  rule add_temp {
+    select when wovyn temp_added
+    pre {
+      temp = event:attr("temp")
+      time = event:attr("time")
+      seq = ent:sequence.defaultsTo(1)
+
+      sensorId = meta:picoId
+      messageId = sensorId + ":" + seq
+
+      message = {
+        "SensorID": sensorId,
+        "MessageID": messageId,
+        "Time": time,
+        "Temp": temp,
+      }
+    }
+
+    always {
+      ent:sequence := ent:sequence + 1;
+      ent:all_messages := ent:all_messages.append(message);
+      ent:seen.klog("(add_temp)seen before: ");
+      ent:seen{sensorId} := seq;
+      ent:seen.klog("(add_temp)seen after: ");
+    }
+  }
 
   // setup that responds to a startup event and
   // sets the schedule for the pico have this trigger
   rule initialization {
     select when wrangler ruleset_added
     always {
-      schedule gossip event "heartbeat" repeat "*/5  *  * * * *"
+      ent:sequence := 1;
+      ent:all_messages := [];
+      ent:seen := {};
+      ent:peer_seen := {};
+      schedule gossip event "heartbeat" repeat "*/60  *  * * * *"
     }
   }
 
@@ -124,10 +177,12 @@ ruleset gossip {
   rule gossip_heartbeat {
     select when gossip heartbeat
     pre {
-      subscriber = getPeer()
+      subscriber = getPeer().klog("Subscriber: ")
       obj = prepareMessage(subscriber)
-      m = obj{"message"}
+      m = obj{"message"}.klog("Message: ")
       type = (obj{"type"} == 1) => "seen" | "rumor"
+
+      hi = subscriber{"Tx"}.klog("gossip heartbeat: subTx: ")
     }
 
     if not m.isnull() then
@@ -143,7 +198,7 @@ ruleset gossip {
   rule respond_to_rumor {
     select when gossip rumor
     pre {
-      msg = event:attr("message")
+      msg = event:attr("message").klog("(respond_to_rumor) message: ")
       seq = getSeq(msg{"MessageID"})
       sensorId = msg{"SensorID"}
     }
@@ -152,8 +207,15 @@ ruleset gossip {
       noop();
 
     fired {
+      ent:all_messages.klog("(respond_to_rumor) all_messages before: ");
       ent:all_messages := ent:all_messages.append(msg);
-      addMySeen(sensorId, seq);
+      ent:all_messages.klog("(respond_to_rumor) all_messages after: ");
+
+      max = ent:seen.get(sensorId).defaultsTo(0).klog("max: ");
+      new_max = (seq - max == 1) => seq | max;
+      ent:seen.klog("(respond_to_rumor) seen before: ");
+      ent:seen := ent:seen.put(sensorId, new_max);
+      ent:seen.klog("(respond_to_rumor) seen after: ");
     }
     // store rumor in ent var, if you havent seen that
     // high yet then make sure to not report it as the highest sequence
@@ -165,9 +227,9 @@ ruleset gossip {
 
     pre {
       message = event:attr("message")
-      sender = event:attr("sender")
+      sender = event:attr("sender").klog("This is the sender info: ")
       originId = message{"originId"}
-      peerId = sender{"Tx"}
+      peerId = sender{"Rx"}.klog("THis is the peer Id we assign it to: ")
     }
     // update peer_seen
 
@@ -181,7 +243,7 @@ ruleset gossip {
 
   rule send_unseen {
     select when gossip seen_resp
-    foreach getUnseenMessages(peerId) setting (msg)
+    foreach getUnseenMessages(event:attr("message")) setting (msg)
       pre {
         sender = event:attr("sender")
         peerId = sender{"Tx"}
