@@ -1,0 +1,17 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2511
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}.}{\leveltext\leveltemplateid1\'02\'00.;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\pardirnatural\partightenfactor0
+\ls1\ilvl0
+\f0\fs24 \cf0 1. We could potentially switch the sequence number with a timestamp. The difference in implementation would be that instead of checking for the highest sequence number or comparing sequence numbers, you would be checking for the most recent timestamp or comparing timestamps. A disadvantage would be that its harder to compare timestamps to see which one is more recent than it is to just compare numbers to see which one is higher. An advantage would be giving more insight as to when a reading is received but I\'92m not sure how helpful that is.\
+2. Because I didn\'92t bring my wovyn device with me I never got to test my project with the device but I\'92m assuming if there was a wovyn device on multiple gossip picos then the messages would be in different orders on each pico because there are multiple new messages to be gossiped about and you can\'92t control the order that they\'92re shared. Since I only sent out individual events that were spaced out the messages were always in order, if I changed the time that it slept in between sending a new rumor or seen messaged to be higher then messages could have been out of order. I could fix this by sorting all messages by their time stamp. \
+3. I avoided looping by checking what the other picos had already received and if they had received a message then I wouldn\'92t send that message again. The unique ID was helpful because it helped to identify which messages the other picos had already seen, if I had abc123abc:3 and another pico had abc123abc:2 then I knew which message I needed to send that pico. \
+4. A low n value means that there are events firing very often and depending on the number of picos running this can be a lot to handle for a computer, my computer would start getting hot if I had too may picos running with a low n value. A high value means less communication between picos which results in picos not coming up to date on messages very fast.\
+5. Yes they did, as long as all nodes are connected in some way they will eventually become up to date. The messages weren\'92t always in the same order because each node didn\'92t always receive the messages in the same order through gossiping.\
+6. Disconnecting a node doesn\'92t cause permanent gaps because these gaps get filled as soon as the node is reconnected and can communicate with the other nodes. The other nodes will send gossip messages to update the node. \
+7. A reachability table a similar to the idea of pico nodes that we had in the gossip lab. In the gossip lab not all nodes were directly connected so they had to gossip with each other to give every node the information. This could be done with the reachability table where if one node on the table experienced a failure it could notify all the other nodes by notifying the ones it could reach which would then notify the nodes they could reach and so on until all nodes are notified. }
